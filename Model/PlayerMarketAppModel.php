@@ -1,4 +1,2 @@
 <?php
-class PlayerMarketAppModel extends AppModel {
-  public $tablePrefix = 'playermarket__';
-}
+class PlayerMarketAppModel extends AppModel {}
