@@ -3,6 +3,7 @@ class Sale extends PlayerMarketAppModel {
 
   public $useTable = false;
   private $__connectionInited = false;
+  private $usersByUUIDs = array();
 
   public function beforeFind($query) {
     if (!$this->__connectionInited) {
@@ -29,6 +30,8 @@ class Sale extends PlayerMarketAppModel {
       $iconName = 'wool_colored_white';
     if ($iconName == 'log')
       $iconName = 'log_oak';
+    if ($iconName == 'leaves')
+      $iconName = 'leaves_acacia_opaque';
     // find
     $pathFind = ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'webroot'.DS.'img'.DS.'textures'.DS.'*'.DS.$iconName.'.png';
     $paths = glob($pathFind);
@@ -45,54 +48,69 @@ class Sale extends PlayerMarketAppModel {
     unset($item['content']);
     $item['start_of_sale'] = date('Y-m-d H:i:s', round($item['start_of_sale'] / 1000));
     $item['end_of_sale'] = (!empty($item['end_of_sale'])) ? date('Y-m-d H:i:s', round($item['end_of_sale'] / 1000)) : null;
-    $item['icon'] = explode(';', $item['icon'])[0];
+    $item['icon'] = $this->__parseIcon($item['icon']);
     $item['seller'] = $this->__getUsername($item['seller']);
     $item['icon_texture_path'] = $this->__getTexturePath($item['icon']);
 
     return $item;
   }
 
+  private function __parseIcon($icon) {
+    $icon = new SimpleXMLElement($icon);
+    return (int)$icon->Item['typeId'];
+  }
+
   private function __getUsername($uuid) {
-    $result = $this->apiComponent->get('/user/from/uuid/' . $uuid);
-    if (!$result->status || !$result->success)
-      return false;
-    return $result->body['username'];
+    if (!isset($this->usersByUUIDs[$uuid])) {
+      $result = $this->apiComponent->get('/user/from/uuid/' . $uuid);
+      if (!$result->status || !$result->success)
+        return false;
+      $this->usersByUUIDs[$uuid] = $result->body['username'];
+    }
+    return $this->usersByUUIDs[$uuid];
+  }
+
+  private function __getTranslateFile() {
+    if (!isset($this->translateFileContent)) {
+      $parsedContent = array();
+      $content = file_get_contents(ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'translate'.DS.'translate.lang');
+      $content = explode("\n", $content);
+      foreach ($content as $line) {
+        $line = explode(':', $line);
+        $parsedContent[$line[0]] = trim($line[1]);
+      }
+      $this->translateFileContent = $parsedContent;
+    }
+    return $this->translateFileContent;
+  }
+
+  private function __translateName($id) {
+    return (isset($this->__getTranslateFile()[$id])) ? $this->__getTranslateFile()[$id] : 'N/A';
   }
 
   private function __parseContent($content) {
-    $items = explode('|', $content);
+    $items = new SimpleXMLElement($content);
     $result = array();
 
     $i = 0;
     foreach ($items as $item) {
-      // NAME;AMOUNT;DURABILITY;NOM_CUSTOM;DATA_ID;ENCHANT_1:NIVEAU,ENCHANT_2:NIVEAU
-      $item = explode(';', $item);
-
-      $translatedName = $item[0];
-
       // global content
       $result[$i] = array(
-        'name' => $item[0],
-        'amount' => $item[1],
-        'durability' => $item[2],
-        'custom_name' => (!empty($item[3])) ? $this->__parseMinecraftColors($item[3]) : $translatedName,
-        'data_id' => $item[4],
+        'item_id' => (int)$item['typeId'],
+        'amount' => (int)$item->Amount,
+        'durability' => @((int)$item->Durability / (int)$item->DurabilityMax) * 100, // percentage
+        'name' => (isset($item->CustomName)) ? $this->__parseMinecraftColors($item->CustomName) : $this->__translateName((int)$item['typeId']),
+        'data_id' => (int)$item->Data,
         'enchantments' => array()
       );
 
       // enchantments
-      $enchantments = explode(',', $item[5]);
-      if (!empty($enchantments)) {
-        foreach ($enchantments as $enchant) {
-          if (!empty($enchant)) {
-            $enchant = explode(':', $enchant);
-            $enchantName = $enchant[0];
-            $enchantLevel = $enchant[1];
-            array_push($result[$i]['enchantments'], array(
-              'name' => $enchantName,
-              'level' => $enchantLevel
-            ));
-          }
+      if (!empty($item->Enchants)) {
+        foreach ($item->Enchants as $enchant) {
+          array_push($result[$i]['enchantments'], array(
+            'name' => (string)$enchant->Name,
+            'level' => (int)$enchant->Value
+          ));
         }
       }
       $i++;
