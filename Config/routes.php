@@ -6,3 +6,4 @@ Router::connect('/market/purchase/money/:id', array('controller' => 'purchase', 
 Router::connect('/market/purchase/recovery/:id', array('controller' => 'purchase', 'action' => 'recovery', 'plugin' => 'PlayerMarket'));
 
 Router::connect('/admin/market/items', array('controller' => 'display', 'action' => 'items', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/items/refresh', array('controller' => 'display', 'action' => 'items_refresh', 'plugin' => 'PlayerMarket', 'admin' => true));

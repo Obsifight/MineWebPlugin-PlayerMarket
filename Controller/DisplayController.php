@@ -3,8 +3,9 @@ class DisplayController extends PlayerMarketAppController {
 
   public function beforeFilter() {
     parent::beforeFilter();
-    //$this->serverId = Configure::read('ObsiPlugin.server.pvp.id');
-    $this->serverId = 6;
+    $this->serverId = Configure::read('ObsiPlugin.server.pvp.id');
+    //$this->serverId = 6;
+    $this->Security->unlockedActions = array('admin_items');
   }
 
   public function index() {
@@ -35,7 +36,21 @@ class DisplayController extends PlayerMarketAppController {
     $this->set('title_for_layout', 'Éditer les items');
 
     $this->loadModel('PlayerMarket.MinecraftItem');
+
+    if ($this->request->is('post')) { // save
+      $this->MinecraftItem->saveAll($this->request->data['items']);
+    }
+
+    $this->set('items', $this->MinecraftItem->find('all'));
+  }
+
+  public function admin_items_refresh() {
+    $this->autoRender = false;
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_ITEMS'))
+      throw new ForbiddenException();
+    $this->loadModel('PlayerMarket.MinecraftItem');
     $this->MinecraftItem->__parse();
+    $this->response->body('OK.');
   }
 
 }

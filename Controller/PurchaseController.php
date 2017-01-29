@@ -3,8 +3,8 @@ class PurchaseController extends PlayerMarketAppController {
 
   public function beforeFilter() {
     parent::beforeFilter();
-    //$this->serverId = Configure::read('ObsiPlugin.server.pvp.id');
-    $this->serverId = 6;
+    $this->serverId = Configure::read('ObsiPlugin.server.pvp.id');
+    //$this->serverId = 6;
   }
 
   public function buyWithPoints() {
