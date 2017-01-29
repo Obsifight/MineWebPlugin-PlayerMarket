@@ -13,6 +13,7 @@ class Sale extends PlayerMarketAppModel {
       $this->useDbConfig = 'WebMarket';
       $this->useTable = 'webmarket';
       $this->__connectionInited = true;
+      $this->MinecraftItem = ClassRegistry::init('PlayerMarket.MinecraftItem');
     }
     return true;
   }
@@ -23,15 +24,10 @@ class Sale extends PlayerMarketAppModel {
     return $class->convertToHTML($string);
   }
 
-  private function __getTexturePath($icon) {
+  private function __getTexturePath($iconId) {
     // icon name
-    $iconName = strtolower($icon);
-    if ($iconName == 'wool')
-      $iconName = 'wool_colored_white';
-    if ($iconName == 'log')
-      $iconName = 'log_oak';
-    if ($iconName == 'leaves')
-      $iconName = 'leaves_acacia_opaque';
+    $item = $this->MinecraftItem->find('first', array('conditions' => array('minecraft_id' => $iconId)));
+    $iconName = (!empty($item)) ? $item['MinecraftItem']['texture_name'] : 'null';
     // find
     $pathFind = ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'webroot'.DS.'img'.DS.'textures'.DS.'*'.DS.$iconName.'.png';
     $paths = glob($pathFind);
@@ -70,22 +66,15 @@ class Sale extends PlayerMarketAppModel {
     return $this->usersByUUIDs[$uuid];
   }
 
-  private function __getTranslateFile() {
-    if (!isset($this->translateFileContent)) {
-      $parsedContent = array();
-      $content = file_get_contents(ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'translate'.DS.'translate.lang');
-      $content = explode("\n", $content);
-      foreach ($content as $line) {
-        $line = explode(':', $line);
-        $parsedContent[$line[0]] = trim($line[1]);
-      }
-      $this->translateFileContent = $parsedContent;
-    }
-    return $this->translateFileContent;
+  private function __translateName($id) {
+    $item = $this->MinecraftItem->find('first', array('conditions' => array('minecraft_id' => $id)));
+    return (!empty($item)) ? $item['MinecraftItem']['translated_name'] : 'N/A';
   }
 
-  private function __translateName($id) {
-    return (isset($this->__getTranslateFile()[$id])) ? $this->__getTranslateFile()[$id] : 'N/A';
+  private function __translateEnchantName($name) {
+    if (!isset($this->enchantTranslateFile))
+      $this->enchantTranslateFile = json_decode(file_get_contents(ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'enchants.json'), true);
+    return (isset($this->enchantTranslateFile[$name])) ? $this->enchantTranslateFile[$name] : $name;
   }
 
   private function __parseContent($content) {
@@ -98,7 +87,7 @@ class Sale extends PlayerMarketAppModel {
       $result[$i] = array(
         'item_id' => (int)$item['typeId'],
         'amount' => (int)$item->Amount,
-        'durability' => @((int)$item->Durability / (int)$item->DurabilityMax) * 100, // percentage
+        'durability' => @(((int)$item->DurabilityMax - (int)$item->Durability) / (int)$item->DurabilityMax) * 100, // percentage
         'name' => (isset($item->CustomName)) ? $this->__parseMinecraftColors($item->CustomName) : $this->__translateName((int)$item['typeId']),
         'data_id' => (int)$item->Data,
         'enchantments' => array()
@@ -108,8 +97,8 @@ class Sale extends PlayerMarketAppModel {
       if (!empty($item->Enchants)) {
         foreach ($item->Enchants as $enchant) {
           array_push($result[$i]['enchantments'], array(
-            'name' => (string)$enchant->Name,
-            'level' => (int)$enchant->Value
+            'name' => $this->__translateEnchantName((string)$enchant->Enchant['name']),
+            'level' => (int)$enchant->Enchant['value']
           ));
         }
       }
