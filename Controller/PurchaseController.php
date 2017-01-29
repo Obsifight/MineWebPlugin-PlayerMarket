@@ -35,10 +35,16 @@ class PurchaseController extends PlayerMarketAppController {
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Le serveur est temporairement indisponible. Il est donc impossible de procéder à un achat.")));
     $this->Server->call(array('performCommand' => "market give {$this->User->getKey('pseudo')} {$find['Sale']['id_selling']} POINTS"), true, $this->serverId);
 
+    sleep(1); // wait plugin db update
+
     // check if state = COMPLETED
     $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'COMPLETED')));
-    if (empty($find))
-      return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat. Veuillez rééssayer.")));
+    if (empty($find)) {
+      sleep(2); // wait plugin db update
+      $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'COMPLETED')));
+      if (empty($find))
+        return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat. Veuillez rééssayer.")));
+    }
 
     // Calculate new sold
     $findUser = $this->User->find('first', array('conditions' => array('id' => $this->User->getKey('id'))));
@@ -46,6 +52,21 @@ class PurchaseController extends PlayerMarketAppController {
 
     // Set new sold
     $this->User->id = $this->User->getKey('id');
+    $this->User->saveField('money', $newSold);
+
+    // add to seller
+    $this->api = $this->Components->load('Obsi.Api');
+    $getUsername = $this->api->get('/user/from/uuid/' . $find['Sale']['seller']);
+    if (!$getUsername->status || !$getUsername->success)
+      return false;
+    $usernamme = $getUsername->body['username'];
+
+    // Calculate new sold
+    $findUser = $this->User->find('first', array('conditions' => array('pseudo' => $username)));
+    $newSold = floatval($findUser['User']['money']) - floatval($find['Sale']['price_money']);
+
+    // Set new sold
+    $this->User->id = $findUser['User']['id'];
     $this->User->saveField('money', $newSold);
 
     // success message
@@ -76,10 +97,58 @@ class PurchaseController extends PlayerMarketAppController {
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Le serveur est temporairement indisponible. Il est donc impossible de procéder à un achat.")));
     $this->Server->call(array('performCommand' => "market give {$this->User->getKey('pseudo')} {$find['Sale']['id_selling']} MONEY"), true, $this->serverId);
 
+    sleep(1); // wait plugin db update
+
     // check if state = COMPLETED
     $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'COMPLETED')));
     if (empty($find))
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat. Veuillez rééssayer.")));
+
+    // success message
+    return $this->response->body(json_encode(array('status' => true)));
+  }
+
+  public function recovery() {
+    $this->response->type('json');
+    $this->autoRender = false;
+
+    if (!$this->isConnected)
+      throw new ForbiddenException('Not logged');
+    if (empty($this->request->params['id']))
+      throw new NotFoundException('Missing id');
+    $id = $this->request->params['id'];
+
+    // uuid for find
+    $this->api = $this->Components->load('Obsi.Api');
+    $getUUID = $this->api->get('/user/uuid/from/' . $this->User->getKey('pseudo'));
+    if (!$getUUID->status || !$getUUID->success)
+      return false;
+    $uuid = $getUUID->body['uuid'];
+
+    // find
+    $this->loadModel('PlayerMarket.Sale');
+    $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'PENDING', 'seller' => $uuid)));
+    if (empty($find))
+      throw new NotFoundException('Sale not found');
+
+    // check date
+    if (strtotime('+48 hours', strtotime($find['Sale']['start_of_sale'])) > time())
+      throw new NotFoundException('Not 48 hours');
+
+    // send command
+    $callConnected = $this->Server->call(array('isConnected' => $this->User->getKey('pseudo')), true, $this->serverId);
+    if (!isset($callConnected['isConnected']) || $callConnected['isConnected'] != "true")
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Vous êtes déconnecté. Il est donc impossible de procéder à cette opération.")));
+    if (!$this->Server->online($this->serverId))
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Le serveur est temporairement indisponible. Il est donc impossible de procéder à cette opération.")));
+    $this->Server->call(array('performCommand' => "market give {$this->User->getKey('pseudo')} {$find['Sale']['id_selling']} RECOVERY"), true, $this->serverId);
+
+    sleep(1); // wait plugin db update
+
+    // check if state = RECOVERY
+    $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'RECOVERY')));
+    if (empty($find))
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'opération. Veuillez rééssayer.")));
 
     // success message
     return $this->response->body(json_encode(array('status' => true)));

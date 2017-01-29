@@ -66,6 +66,13 @@ class Sale extends PlayerMarketAppModel {
     return $this->usersByUUIDs[$uuid];
   }
 
+  private function __getUUID($username) {
+    $result = $this->apiComponent->get('/user/uuid/from/' . $username);
+    if (!$result->status || !$result->success)
+      return false;
+    return $result->body['uuid'];
+  }
+
   private function __translateName($id) {
     $item = $this->MinecraftItem->find('first', array('conditions' => array('minecraft_id' => $id)));
     return (!empty($item)) ? $item['MinecraftItem']['translated_name'] : 'N/A';
@@ -110,6 +117,13 @@ class Sale extends PlayerMarketAppModel {
 
   public function getAll() {
     $query = $this->find('all', array('conditions' => array('state' => 'PENDING')));
+    return array_map(function ($item) {
+      return $this->__parse($item['Sale']);
+    }, $query);
+  }
+
+  public function getFrom($username) {
+    $query = $this->find('all', array('conditions' => array('state' => 'PENDING', 'seller' => $this->__getUUID($username))));
     return array_map(function ($item) {
       return $this->__parse($item['Sale']);
     }, $query);

@@ -13,6 +13,7 @@ class DisplayController extends PlayerMarketAppController {
     $this->loadModel('PlayerMarket.Sale');
     $this->Sale->apiComponent = $this->Components->load('Obsi.Api');
     $this->set('sales', $this->Sale->getAll());
+    $this->set('mySales', $this->Sale->getFrom($this->User->getKey('pseudo')));
   }
 
   public function getUserMoney() {
