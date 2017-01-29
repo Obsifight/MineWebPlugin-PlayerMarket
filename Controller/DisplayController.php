@@ -9,4 +9,14 @@ class DisplayController extends PlayerMarketAppController {
     $this->set('sales', $this->Sale->getAll());
   }
 
+  public function admin_items() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_ITEMS'))
+      throw new ForbiddenException();
+    $this->layout = 'admin';
+    $this->set('title_for_layout', 'Éditer les items');
+
+    $this->loadModel('PlayerMarket.MinecraftItem');
+    $this->MinecraftItem->__parse();
+  }
+
 }

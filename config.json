@@ -8,7 +8,7 @@
   "apiID":-1,
   "useEvents":true,
   "permissions" : {
-    "available" : [],
+    "available" : ["PLAYERMARKET__EDIT_ITEMS"],
     "default" : {
       "0" : [],
       "2" : []
