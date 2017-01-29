@@ -2,13 +2,12 @@
 class MinecraftItem extends PlayerMarketAppModel {
   public $useTable = 'playermarket__minecraft_items';
 
-  public $paths = array(
-    'lang' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'en_US.lang',
-    'blocks' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'Block.java',
-    'items' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'Item.java'
-  );
-
   public function __parse() {
+    $this->paths = array(
+      'lang' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'en_US.lang',
+      'blocks' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'Block.java',
+      'items' => ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'Vendor'.DS.'Minecraft'.DS.'Item.java'
+    );
     $results = array();
 
     /* =========
