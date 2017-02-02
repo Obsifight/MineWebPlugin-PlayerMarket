@@ -24,13 +24,21 @@ class Sale extends PlayerMarketAppModel {
     return $class->convertToHTML($string);
   }
 
+  private function __globRecursive($pattern, $flags = 0) {
+    $files = glob($pattern, $flags);
+    foreach (glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir) {
+      $files = array_merge($files, $this->__globRecursive($dir.'/'.basename($pattern), $flags));
+    }
+    return $files;
+  }
+
   private function __getTexturePath($iconId) {
     // icon name
     $item = $this->MinecraftItem->find('first', array('conditions' => array('minecraft_id' => $iconId)));
     $iconName = (!empty($item)) ? $item['MinecraftItem']['texture_name'] : 'null';
     // find
     $pathFind = ROOT.DS.'app'.DS.'Plugin'.DS.'PlayerMarket'.DS.'webroot'.DS.'img'.DS.'textures'.DS.'*'.DS.$iconName.'.png';
-    $paths = glob($pathFind);
+    $paths = $this->__globRecursive($pathFind);
     $path = (!empty($paths)) ? $paths[0] : null;
     if (empty($path))
       return null;
@@ -45,7 +53,7 @@ class Sale extends PlayerMarketAppModel {
     $item['start_of_sale'] = date('Y-m-d H:i:s', round($item['start_of_sale'] / 1000));
     $item['end_of_sale'] = (!empty($item['end_of_sale'])) ? date('Y-m-d H:i:s', round($item['end_of_sale'] / 1000)) : null;
     $item['icon'] = $this->__parseIcon($item['icon']);
-    $item['seller'] = $this->__getUsername($item['seller']);
+    $item['seller'] = /*$this->__getUsername(*/$item['seller']/*)*/;
     $item['icon_texture_path'] = $this->__getTexturePath($item['icon']);
 
     return $item;
@@ -56,7 +64,7 @@ class Sale extends PlayerMarketAppModel {
     return (int)$icon->Item['typeId'];
   }
 
-  private function __getUsername($uuid) {
+  /*private function __getUsername($uuid) {
     if (!isset($this->usersByUUIDs[$uuid])) {
       $result = $this->apiComponent->get('/user/from/uuid/' . $uuid);
       if (!$result->status || !$result->success)
@@ -64,7 +72,7 @@ class Sale extends PlayerMarketAppModel {
       $this->usersByUUIDs[$uuid] = $result->body['username'];
     }
     return $this->usersByUUIDs[$uuid];
-  }
+  }*/
 
   private function __getUUID($username) {
     $result = $this->apiComponent->get('/user/uuid/from/' . $username);
