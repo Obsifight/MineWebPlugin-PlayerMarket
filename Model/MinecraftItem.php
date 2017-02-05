@@ -1,6 +1,6 @@
 <?php
 class MinecraftItem extends PlayerMarketAppModel {
-  public $useTable = 'playermarket__minecraft_items';
+  public $useTable = 'minecraft_items';
 
   public function __parse() {
     $this->paths = array(
@@ -29,7 +29,7 @@ class MinecraftItem extends PlayerMarketAppModel {
     ============ */
     // get all blocks
     $blocksFile = file_get_contents($this->paths['blocks']);
-    preg_match_all('/blockRegistry.addObject\([0-9]*.*\.setBlockTextureName\("[A-Z_]*"\)\)/i', $blocksFile, $matchesBlocks);
+    preg_match_all('/blockRegistry.addObject\([0-9]*.*\.setBlockTextureName\("[A-Z_]*"\)/i', $blocksFile, $matchesBlocks);
 
     // each
     $blocks = array();

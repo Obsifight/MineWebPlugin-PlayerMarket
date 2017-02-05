@@ -59,7 +59,7 @@ class PurchaseController extends PlayerMarketAppController {
     $getUsername = $this->api->get('/user/from/uuid/' . $find['Sale']['seller']);
     if (!$getUsername->status || !$getUsername->success)
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat (2). Veuillez rééssayer.")));
-    $usernamme = $getUsername->body['username'];
+    $username = $getUsername->body['username'];
 
     // Calculate new sold
     $findUser = $this->User->find('first', array('conditions' => array('pseudo' => $username)));
@@ -68,6 +68,19 @@ class PurchaseController extends PlayerMarketAppController {
     // Set new sold
     $this->User->id = $findUser['User']['id'];
     $this->User->saveField('money', $newSold);
+
+    // save history
+    $this->loadModel('PlayerMarket.PurchaseHistory');
+    $this->PurchaseHistory->create();
+    $this->PurchaseHistory->set(array(
+      'user_id' => $this->User->getKey('id'),
+      'selling_id' => $id,
+      'mode' => 'POINT',
+      'price' => $find['Sale']['price_point'],
+      'seller_uuid' => $find['Sale']['seller'],
+      'seller_id' => $findUser['User']['id'],
+    ));
+    $this->PurchaseHistory->save();
 
     // success message
     return $this->response->body(json_encode(array('status' => true)));
@@ -103,6 +116,27 @@ class PurchaseController extends PlayerMarketAppController {
     $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'COMPLETED')));
     if (empty($find))
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat. Veuillez rééssayer.")));
+
+    // seller id
+    $this->api = $this->Components->load('Obsi.Api');
+    $getUsername = $this->api->get('/user/from/uuid/' . $find['Sale']['seller']);
+    if (!$getUsername->status || !$getUsername->success)
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat (2). Veuillez rééssayer.")));
+    $username = $getUsername->body['username'];
+    $findUser = $this->User->find('first', array('conditions' => array('pseudo' => $username)));
+
+    // save history
+    $this->loadModel('PlayerMarket.PurchaseHistory');
+    $this->PurchaseHistory->create();
+    $this->PurchaseHistory->set(array(
+      'user_id' => $this->User->getKey('id'),
+      'selling_id' => $id,
+      'mode' => 'MONEY',
+      'price' => $find['Sale']['price_money'],
+      'seller_uuid' => $find['Sale']['seller'],
+      'seller_id' => $findUser['User']['id'],
+    ));
+    $this->PurchaseHistory->save();
 
     // success message
     return $this->response->body(json_encode(array('status' => true)));
@@ -149,6 +183,19 @@ class PurchaseController extends PlayerMarketAppController {
     $find = $this->Sale->find('first', array('conditions' => array('id_selling' => $id, 'state' => 'RECOVERY')));
     if (empty($find))
       return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'opération. Veuillez rééssayer.")));
+
+    // save history
+    $this->loadModel('PlayerMarket.PurchaseHistory');
+    $this->PurchaseHistory->create();
+    $this->PurchaseHistory->set(array(
+      'user_id' => $this->User->getKey('id'),
+      'selling_id' => $id,
+      'mode' => 'RECOVERY',
+      'price' => 0.0,
+      'seller_uuid' => $find['Sale']['seller'],
+      'seller_id' => $this->User->getKey('id'),
+    ));
+    $this->PurchaseHistory->save();
 
     // success message
     return $this->response->body(json_encode(array('status' => true)));

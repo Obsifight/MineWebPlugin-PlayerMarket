@@ -16,7 +16,10 @@ class DisplayController extends PlayerMarketAppController {
     $this->set('sales', array_map(function ($sale) {
       // display items
       foreach ($sale['items'] as $k => $item) {
-        $sale['items'][$k]['name_parsed'] =  $item['amount'].' '.$item['name'];
+        $name = $item['name'];
+        if (strpos($name, '<span>') === 0)
+          $name = '<span class="text-info">'.$name.'</span>';
+        $sale['items'][$k]['name_parsed'] =  '<span class="label label-info">' . $item['amount'] . '</span>' . ' ' . $name;
         if (!empty($item['enchantments'])) {
           $sale['items'][$k]['name_parsed'] .= '&nbsp;(<em>'.implode(', ', array_map(function ($enchant) {
             return implode(' ', $enchant);
