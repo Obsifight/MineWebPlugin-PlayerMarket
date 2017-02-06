@@ -23,4 +23,19 @@ class PlayerMarketAppSchema extends CakeSchema {
     ),
     'tableParameters' => array('charset' => 'latin1', 'collate' => 'latin1_swedish_ci', 'engine' => 'InnoDB')
   );
+
+  public $playermarket__purchase_histories = array(
+    'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary'),
+    'user_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false),
+    'selling_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false),
+    'mode' => array('type' => 'string', 'null' => false, 'default' => null, 'length' => 8, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
+    'price' => array('type' => 'float', 'null' => false, 'default' => null, 'unsigned' => false),
+    'seller_uuid' => array('type' => 'string', 'null' => false, 'default' => null, 'length' => 40, 'collate' => 'latin1_swedish_ci', 'charset' => 'latin1'),
+    'seller_id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false),
+    'created' => array('type' => 'datetime', 'null' => false, 'default' => null),
+    'indexes' => array(
+            'PRIMARY' => array('column' => 'id', 'unique' => 1)
+    ),
+    'tableParameters' => array('charset' => 'latin1', 'collate' => 'latin1_swedish_ci', 'engine' => 'InnoDB')
+  );
 }

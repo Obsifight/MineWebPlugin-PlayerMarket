@@ -11,6 +11,13 @@ class DisplayController extends PlayerMarketAppController {
   public function index() {
     $this->set('title_for_layout', $this->Lang->get('PLAYERMARKET__HOMEPAGE_TITLE'));
 
+    // get state
+    $this->loadModel('PlayerMarket.MinecraftItem');
+    $state = ($this->MinecraftItem->find('count', array('conditions' => array('minecraft_id' => '-1', 'name' => 'DISABLED'))) === 0);
+    $this->set('state', $state);
+    if (!$state)
+      return;
+
     $this->loadModel('PlayerMarket.Sale');
     $this->Sale->apiComponent = $this->Components->load('Obsi.Api');
     $this->set('sales', array_map(function ($sale) {
@@ -99,6 +106,42 @@ class DisplayController extends PlayerMarketAppController {
     $response = $this->DataTable->getResponse();
 
     $this->response->body(json_encode($response));
+  }
+
+  public function admin_infos() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_STATE'))
+      throw new ForbiddenException();
+    $this->layout = 'admin';
+    $this->set('title_for_layout', 'Gérer le webmarket');
+
+    // get state
+    $this->loadModel('PlayerMarket.MinecraftItem');
+    $this->set('state', ($this->MinecraftItem->find('count', array('conditions' => array('minecraft_id' => '-1', 'name' => 'DISABLED'))) === 0));
+  }
+
+  public function admin_enable() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_STATE'))
+      throw new ForbiddenException();
+    $this->autoRender = false;
+
+    $this->loadModel('PlayerMarket.MinecraftItem');
+    $this->MinecraftItem->deleteAll(array('minecraft_id' => -1, 'name' => 'DISABLED'));
+
+    $this->Session->setFlash('Vous avez bien activé le market !', 'default.success');
+    $this->redirect(array('action' => 'infos'));
+  }
+  public function admin_disable() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_STATE'))
+      throw new ForbiddenException();
+      $this->autoRender = false;
+
+    $this->loadModel('PlayerMarket.MinecraftItem');
+    $this->MinecraftItem->create();
+    $this->MinecraftItem->set(array('minecraft_id' => -1, 'name' => 'DISABLED'));
+    $this->MinecraftItem->save();
+
+    $this->Session->setFlash('Vous avez bien désactivé le market !', 'default.success');
+    $this->redirect(array('action' => 'infos'));
   }
 
   /*public function admin_items_refresh() {

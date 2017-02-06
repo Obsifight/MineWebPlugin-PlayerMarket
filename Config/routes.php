@@ -10,3 +10,6 @@ Router::connect('/admin/market/items', array('controller' => 'display', 'action'
 Router::connect('/admin/market/items/refresh', array('controller' => 'display', 'action' => 'items_refresh', 'plugin' => 'PlayerMarket', 'admin' => true));
 Router::connect('/admin/market/history', array('controller' => 'display', 'action' => 'histories', 'plugin' => 'PlayerMarket', 'admin' => true));
 Router::connect('/admin/market/history/data', array('controller' => 'display', 'action' => 'get_histories', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/infos', array('controller' => 'display', 'action' => 'infos', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/infos/enable', array('controller' => 'display', 'action' => 'enable', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/infos/disable', array('controller' => 'display', 'action' => 'disable', 'plugin' => 'PlayerMarket', 'admin' => true));

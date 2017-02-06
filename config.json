@@ -3,7 +3,20 @@
   "slug":"PlayerMarket",
   "nav":true,
   "admin":true,
-  "admin_route": "/admin/market/history",
+  "admin_menus": [
+    {
+        "name": "Voir l'historique",
+        "icon": "database",
+        "url": "/admin/market/history",
+        "permission": "PLAYERMARKET__VIEW_HISTORY"
+    },
+    {
+        "name": "Informations",
+        "icon": "wrench",
+        "url": "/admin/market/infos",
+        "permission": "PLAYERMARKET__EDIT_STATE"
+    }
+  ],
   "admin_name": "Market",
   "admin_icon": "shopping-cart",
   "admin_group_menu": "customisation",
@@ -12,7 +25,7 @@
   "apiID":-1,
   "useEvents":true,
   "permissions" : {
-    "available" : ["PLAYERMARKET__EDIT_ITEMS", "PLAYERMARKET__VIEW_HISTORY"],
+    "available" : ["PLAYERMARKET__EDIT_ITEMS", "PLAYERMARKET__VIEW_HISTORY", "PLAYERMARKET__EDIT_STATE"],
     "default" : {
       "0" : [],
       "2" : []
