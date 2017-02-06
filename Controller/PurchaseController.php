@@ -23,9 +23,11 @@ class PurchaseController extends PlayerMarketAppController {
     if (empty($find))
       throw new NotFoundException('Sale not found');
 
-    // check price
-    if ($this->User->getKey('money') < $find['Sale']['price_money'])
-      return $this->response->body(json_encode(array('status' => false, 'msg' => "Vous ne disposez pas d'assez de {$this->Configuration->getMoneyName()} pour procéder à cet achat.")));
+    // Calculate new sold
+    $findUser = $this->User->find('first', array('conditions' => array('id' => $this->User->getKey('id'))));
+    $newSold = floatval($findUser['User']['money']) - floatval($find['Sale']['price_point']);
+    if ($newSold <= 0)
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Vous n'avez pas les fonds nécessaires.")));
 
     // send command
     $callConnected = $this->Server->call(array('isConnected' => $this->User->getKey('pseudo')), true, $this->serverId);
@@ -45,12 +47,6 @@ class PurchaseController extends PlayerMarketAppController {
       if (empty($find))
         return $this->response->body(json_encode(array('status' => false, 'msg' => "Une erreur est intervenue lors de l'achat. Veuillez rééssayer.")));
     }
-
-    // Calculate new sold
-    $findUser = $this->User->find('first', array('conditions' => array('id' => $this->User->getKey('id'))));
-    $newSold = floatval($findUser['User']['money']) - floatval($find['Sale']['price_point']);
-    if ($newSold <= 0)
-      return $this->response->body(json_encode(array('status' => false, 'msg' => "Vous n'avez pas les fonds nécessaires.")));
 
     // Set new sold
     $this->User->id = $this->User->getKey('id');
