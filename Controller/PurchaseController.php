@@ -49,6 +49,8 @@ class PurchaseController extends PlayerMarketAppController {
     // Calculate new sold
     $findUser = $this->User->find('first', array('conditions' => array('id' => $this->User->getKey('id'))));
     $newSold = floatval($findUser['User']['money']) - floatval($find['Sale']['price_point']);
+    if ($newSold <= 0)
+      return $this->response->body(json_encode(array('status' => false, 'msg' => "Vous n'avez pas les fonds nécessaires.")));
 
     // Set new sold
     $this->User->id = $this->User->getKey('id');
