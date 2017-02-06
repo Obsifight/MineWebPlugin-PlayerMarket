@@ -2,13 +2,17 @@
   "name":"Market joueurs",
   "slug":"PlayerMarket",
   "nav":true,
-  "admin":false,
+  "admin":true,
+  "admin_route": "/admin/market/history",
+  "admin_name": "Market",
+  "admin_icon": "shopping-cart",
+  "admin_group_menu": "customisation",
   "author":"Eywek",
   "version":"1.0.0",
   "apiID":-1,
   "useEvents":true,
   "permissions" : {
-    "available" : ["PLAYERMARKET__EDIT_ITEMS"],
+    "available" : ["PLAYERMARKET__EDIT_ITEMS", "PLAYERMARKET__VIEW_HISTORY"],
     "default" : {
       "0" : [],
       "2" : []

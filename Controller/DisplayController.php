@@ -74,13 +74,40 @@ class DisplayController extends PlayerMarketAppController {
     $this->set('items', $this->MinecraftItem->find('all'));
   }
 
-  public function admin_items_refresh() {
+  public function admin_histories() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__VIEW_HISTORY'))
+      throw new ForbiddenException();
+    $this->layout = 'admin';
+    $this->set('title_for_layout', 'Historique des ventes');
+  }
+
+  public function admin_get_histories() {
+    if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__VIEW_HISTORY'))
+      throw new ForbiddenException();
+    $this->autoRender = false;
+    $this->response->type('json');
+
+    $this->DataTable = $this->Components->load('DataTable');
+    $this->modelClass = 'PurchaseHistory';
+    $this->DataTable->initialize($this);
+    $this->paginate = array(
+      'fields' => array($this->modelClass.'.id',$this->modelClass.'.user_id','User.pseudo',$this->modelClass.'.selling_id',$this->modelClass.'.mode',$this->modelClass.'.price', $this->modelClass.'.seller_id', 'Seller.pseudo', $this->modelClass.'.created'),
+      'recursive' => 1
+    );
+    $this->DataTable->mDataProp = true;
+
+    $response = $this->DataTable->getResponse();
+
+    $this->response->body(json_encode($response));
+  }
+
+  /*public function admin_items_refresh() {
     $this->autoRender = false;
     if (!$this->isConnected || !$this->Permissions->can('PLAYERMARKET__EDIT_ITEMS'))
       throw new ForbiddenException();
     $this->loadModel('PlayerMarket.MinecraftItem');
     $this->MinecraftItem->__parse();
     $this->response->body('OK.');
-  }
+  }*/
 
 }

@@ -8,3 +8,5 @@ Router::connect('/market/purchase/recovery/:id', array('controller' => 'purchase
 
 Router::connect('/admin/market/items', array('controller' => 'display', 'action' => 'items', 'plugin' => 'PlayerMarket', 'admin' => true));
 Router::connect('/admin/market/items/refresh', array('controller' => 'display', 'action' => 'items_refresh', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/history', array('controller' => 'display', 'action' => 'histories', 'plugin' => 'PlayerMarket', 'admin' => true));
+Router::connect('/admin/market/history/data', array('controller' => 'display', 'action' => 'get_histories', 'plugin' => 'PlayerMarket', 'admin' => true));

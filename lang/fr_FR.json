@@ -1,4 +1,5 @@
 {
   "PLAYERMARKET__HOMEPAGE_TITLE": "Market",
-  "PERMISSIONS__PLAYERMARKET__EDIT_ITEMS": "Éditer les traductions des items."
+  "PERMISSIONS__PLAYERMARKET__EDIT_ITEMS": "Éditer les traductions des items.",
+  "PERMISSIONS__PLAYERMARKET__VIEW_HISTORY": "Voir l'historique d'achats sur le webmarket"
 }
