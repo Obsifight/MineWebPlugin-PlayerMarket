@@ -18,6 +18,26 @@ class DisplayController extends PlayerMarketAppController {
     if (!$state)
       return;
 
+    // Check if he can see shop (already connected to launcher + logged)
+    if (!$this->isConnected)
+      return $this->set('canViewMarket', false);
+    // Check launcher logs
+    App::uses('ConnectionManager', 'Model');
+    $con = new ConnectionManager;
+    try {
+      ConnectionManager::create('Util', Configure::read('Obsi.db.Util'));
+    } catch (Exception $e) {
+      $this->log('Error: '.$e->getMessage());
+      $error = true;
+    }
+    if (!isset($error)) {
+      $dbUtil = $con->getDataSource('Util');
+      $launcherConnectionLogs = $dbUtil->query("SELECT * FROM loginlogs WHERE username = '{$this->User->getKey('pseudo')}' ORDER BY id DESC");
+      if (empty($launcherConnectionLogs))
+        return $this->set('canViewMarket', false);
+    }
+    $this->set('canViewMarket', true); // he can
+
     $this->loadModel('PlayerMarket.Sale');
     $this->Sale->apiComponent = $this->Components->load('Obsi.Api');
     $this->set('sales', array_map(function ($sale) {
